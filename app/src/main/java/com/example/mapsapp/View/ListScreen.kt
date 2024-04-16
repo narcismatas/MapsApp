@@ -1,6 +1,7 @@
 package com.example.mapsapp.View
 
 import android.Manifest
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,7 +95,7 @@ fun ListScaffold(navController: NavController, viewModel: MainViewModel, state: 
                             .fillMaxWidth()
                             .height(5.dp)
                     )
-                    MarkerCard(marker = marker, viewModel)
+                    MarkerCard(marker = marker, viewModel, navController)
                     Spacer(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -112,7 +113,7 @@ fun ListScaffold(navController: NavController, viewModel: MainViewModel, state: 
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel) {
+fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: NavController) {
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth(0.95f)
@@ -148,11 +149,7 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel) {
                 )
             } else
                 FloatingActionButton(
-                    onClick = {
-                        if (viewModel.imageUri.value != null){
-                            viewModel.uploadImage(viewModel.imageUri.value!!, marker)
-                        }
-                              },
+                    onClick = {  },
                     modifier = Modifier
                         .height(100.dp)
                         .aspectRatio(1f),

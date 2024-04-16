@@ -293,11 +293,12 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
             val markerTitle by viewModel.tempTitle.observeAsState()
             val selectedColor by viewModel.tempColor.observeAsState("Red")
             val colorOptions = listOf("Blue", "Cyan", "Green", "Yellow", "Red", "LightGray")
-            LazyColumn (
+            val uid by viewModel.userId.observeAsState()
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight()
-            ){
+            ) {
                 item {
                     if (isCurrentLocation) {
                         Text(
@@ -346,13 +347,13 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
                 }
                 item {
                     Text(
-                            text = "Description",
-                    style = TextStyle(
-                        fontFamily = gilmer,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black
-                    ),
-                    modifier = Modifier.padding(20.dp)
+                        text = "Description",
+                        style = TextStyle(
+                            fontFamily = gilmer,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black
+                        ),
+                        modifier = Modifier.padding(20.dp)
                     )
                 }
                 item {
@@ -368,14 +369,14 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
                 }
                 item {
                     Text(
-                    text = "Marker color",
-                    style = TextStyle(
-                        fontFamily = gilmer,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black
-                    ),
-                    modifier = Modifier.padding(20.dp)
-                )
+                        text = "Marker color",
+                        style = TextStyle(
+                            fontFamily = gilmer,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black
+                        ),
+                        modifier = Modifier.padding(20.dp)
+                    )
                 }
                 item {
                     Row(
@@ -394,7 +395,7 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
                                         viewModel.onColorChange(item)
                                     },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = when(item){
+                                        containerColor = when (item) {
                                             "Red" -> Color(0xFFff0000)
                                             "Green" -> Color(0xFF8cc63f)
                                             "Yellow" -> Color(0xFFffff00)
@@ -424,13 +425,14 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
                 item {
                     if (showPermissionDenied) {
                         PermissionDeclinedScreen()
-                    } else if (image != null){
-                        Row (
+                    } else if (image != null) {
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .wrapContentHeight()
                                 .padding(top = 20.dp),
-                            horizontalArrangement = Arrangement.Center){
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Image(
                                 bitmap = image!!.asImageBitmap(),
                                 contentDescription = "PhotoTaken",
@@ -527,26 +529,31 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
                             onClick = {
                                 if (uri != null) {
                                     Log.i("URI", "No nula")
-                                    viewModel.uploadImage(uri!!, SavedMarker(
-                                        null,
-                                        markerTitle!!,
-                                        viewModel.selectedPosition.value!!.latitude,
-                                        viewModel.selectedPosition.value!!.longitude,
-                                        selectedColor,
-                                        markerDescription!!,
-                                        image = null
-                                    ))
+                                    viewModel.uploadImage(
+                                        uri!!, SavedMarker(
+                                            null,
+                                            uid!!,
+                                            markerTitle!!,
+                                            viewModel.selectedPosition.value!!.latitude,
+                                            viewModel.selectedPosition.value!!.longitude,
+                                            selectedColor,
+                                            markerDescription!!,
+                                            image = null
+                                        )
+                                    )
                                 } else {
                                     viewModel.addMarker(
                                         SavedMarker(
-                                        null,
-                                        markerTitle!!,
-                                        viewModel.selectedPosition.value!!.latitude,
-                                        viewModel.selectedPosition.value!!.longitude,
-                                        selectedColor,
-                                        markerDescription!!,
-                                        image = null
-                                    ))
+                                            null,
+                                            uid!!,
+                                            markerTitle!!,
+                                            viewModel.selectedPosition.value!!.latitude,
+                                            viewModel.selectedPosition.value!!.longitude,
+                                            selectedColor,
+                                            markerDescription!!,
+                                            image = null
+                                        )
+                                    )
                                 }
                                 viewModel.clearImage()
 

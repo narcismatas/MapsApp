@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Button
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -56,8 +58,10 @@ import com.example.mapsapp.View.CameraScreen
 import com.example.mapsapp.View.GalleryScreen
 import com.example.mapsapp.View.HomeScreen
 import com.example.mapsapp.View.ListScreen
+import com.example.mapsapp.View.LogInScreen
 import com.example.mapsapp.View.Map
 import com.example.mapsapp.View.MyTopAppBar
+import com.example.mapsapp.View.RegisterScreen
 import com.example.mapsapp.View.Routes
 import com.example.mapsapp.ui.theme.MapsAppTheme
 import com.example.mapsapp.ViewModel.MainViewModel
@@ -78,7 +82,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = Routes.HomeScreen.route
+                        startDestination = Routes.LogInScreen.route
                     ) {
                         composable(Routes.HomeScreen.route) {
                             MyDrawer(mainViewModel, navController, "Home")
@@ -91,6 +95,12 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Routes.GalleryScreen.route) {
                             GalleryScreen(navController, mainViewModel)
+                        }
+                        composable(Routes.LogInScreen.route) {
+                            LogInScreen(navController, mainViewModel)
+                        }
+                        composable(Routes.RegisterScreen.route) {
+                            RegisterScreen(navController, mainViewModel)
                         }
                     }
                 }
@@ -175,7 +185,7 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                             )
                         )
                     },
-                    selected =  screen == "List",
+                    selected = screen == "List",
                     onClick = {
                         val selectedScreen = "List"
                         scope.launch {
@@ -187,6 +197,40 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                     },
                     shape = RoundedCornerShape(15)
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.End)
+                        .clickable {
+                            scope.launch {
+                                state.close()
+                                viewModel.logout()
+                                navigationController.navigate(Routes.LogInScreen.route)
+                            }
+                        },
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = { TODO() }) {
+                        Icon(
+                            imageVector = Icons.Filled.Logout,
+                            contentDescription = "Close",
+                            Modifier.size(35.dp)
+                        )
+                    }
+                    Text(
+                        "Log Out",
+                        modifier = Modifier.padding(0.dp),
+                        style = TextStyle(
+                            fontFamily = gilmer,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Black,
+                        )
+                    )
+
+                }
             }
         }
     ) {

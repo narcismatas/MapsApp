@@ -3,11 +3,6 @@ package com.example.mapsapp.ViewModel
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -17,6 +12,7 @@ import com.example.mapsapp.Model.repository
 import com.example.mapsapp.Model.SavedMarker
 import com.example.mapsapp.R
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.storage.FirebaseStorage
 import java.text.SimpleDateFormat
@@ -38,6 +34,8 @@ val gilmer = FontFamily(
 class MainViewModel: ViewModel(){
 
     private val repository = repository()
+
+    private val auth = FirebaseAuth.getInstance()
 
     private val _selectedPosition = MutableLiveData(LatLng(0.0, 0.0))
     val selectedPosition = _selectedPosition
@@ -81,7 +79,20 @@ class MainViewModel: ViewModel(){
     private val _showPermissionDenied = MutableLiveData(false)
     val showPermissionDenied = _showPermissionDenied
 
+    private val _goToNext = MutableLiveData<Boolean>(false)
+    val goToNext = _goToNext
 
+    private val _showLoading = MutableLiveData(false)
+    val showLoading = _showLoading
+
+    private val _userId = MutableLiveData<String>()
+    val userId = _userId
+
+    private val _loggedUser = MutableLiveData<String>()
+    val loggedUser = _loggedUser
+
+    private val _showToastUnknownUser = MutableLiveData(false)
+    val showToastUnknownUser = _showToastUnknownUser
 
     fun setCameraPermissionGranted(granted: Boolean) {
         _cameraPermissionGranted.value = granted
@@ -141,7 +152,7 @@ class MainViewModel: ViewModel(){
     }
 
     fun getMarkers(){
-        repository.getMarkers().addSnapshotListener{value, error ->
+        repository.getMarkers().whereEqualTo("uid", userId.value).addSnapshotListener{value, error ->
             if (error != null){
                 Log.e("Firestone error", error.message.toString())
                 return@addSnapshotListener
@@ -189,6 +200,7 @@ class MainViewModel: ViewModel(){
                     addMarker(
                         SavedMarker(
                             null,
+                            info.uid,
                             info.title,
                             info.latitude,
                             info.longitude,
@@ -204,6 +216,7 @@ class MainViewModel: ViewModel(){
                 addMarker(
                     SavedMarker(
                         null,
+                        info.uid,
                         info.title,
                         info.latitude,
                         info.longitude,
@@ -213,7 +226,6 @@ class MainViewModel: ViewModel(){
                     )
                 )
             }
-
 
     }
 
@@ -230,6 +242,7 @@ class MainViewModel: ViewModel(){
                     addMarker(
                         SavedMarker(
                             null,
+                            info.uid,
                             info.title,
                             info.latitude,
                             info.longitude,
@@ -245,6 +258,7 @@ class MainViewModel: ViewModel(){
                 repository.editMarker(
                     SavedMarker(
                         null,
+                        userId.value!!,
                         info.title,
                         info.latitude,
                         info.longitude,
@@ -254,5 +268,49 @@ class MainViewModel: ViewModel(){
                     )
                 )
             }
+    }
+
+    fun modifyProcessing(){
+        showLoading.value = !(showLoading.value)!!
+    }
+
+    fun register(username: String, password: String){
+        auth.createUserWithEmailAndPassword(username, password)
+            .addOnCompleteListener{ task ->
+                if (task.isSuccessful){
+                    _goToNext.value = true
+                    login(username, password)
+                } else{
+                    _goToNext.value = false
+
+                }
+                modifyProcessing()
+            }
+    }
+
+    fun login(username: String?, password: String?){
+        auth.signInWithEmailAndPassword(username!!, password!!)
+            .addOnCompleteListener{task ->
+                if (task.isSuccessful){
+                    _userId.value = task.result.user?.uid
+                    _loggedUser.value = task.result.user?.email?.split("@")?.get(0)
+                    _goToNext.value = true
+                } else {
+                    _goToNext.value = false
+                }
+                modifyProcessing()
+            }
+            .addOnFailureListener{
+                _showToastUnknownUser.value = true
+            }
+    }
+
+    fun hideToast(){
+        _showToastUnknownUser.value = false
+    }
+
+    fun logout(){
+        auth.signOut()
+        _goToNext.value = false
     }
 }

@@ -13,6 +13,7 @@ class repository {
             .add(
                 hashMapOf(
                     "title" to marker.title,
+                    "uid" to marker.uid,
                     "latitude" to marker.latitude,
                     "longitude" to marker.longitude,
                     "color" to marker.color,
@@ -26,6 +27,7 @@ class repository {
         database.collection("SavedMarkers").document(editedMarker.markerId!!).set(
             hashMapOf(
                 "title" to editedMarker.title,
+                "uid" to editedMarker.uid,
                 "latitude" to editedMarker.latitude,
                 "longitude" to editedMarker.longitude,
                 "color" to editedMarker.color,
