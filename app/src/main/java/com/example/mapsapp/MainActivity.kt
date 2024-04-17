@@ -4,6 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Ease
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseInOutExpo
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +50,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -66,6 +80,7 @@ import com.example.mapsapp.View.Routes
 import com.example.mapsapp.ui.theme.MapsAppTheme
 import com.example.mapsapp.ViewModel.MainViewModel
 import com.example.mapsapp.ViewModel.gilmer
+import com.example.mapsapp.dataStore.UserPrefs
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -84,7 +99,14 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         startDestination = Routes.LogInScreen.route
                     ) {
-                        composable(Routes.HomeScreen.route) {
+                        composable(
+                            Routes.HomeScreen.route,
+                            enterTransition = {
+                                fadeIn(
+                                    animationSpec = tween(500, easing = EaseInOutExpo)
+                                )
+                            }
+                        ) {
                             MyDrawer(mainViewModel, navController, "Home")
                         }
                         composable(Routes.ListScreen.route) {
@@ -96,10 +118,39 @@ class MainActivity : ComponentActivity() {
                         composable(Routes.GalleryScreen.route) {
                             GalleryScreen(navController, mainViewModel)
                         }
-                        composable(Routes.LogInScreen.route) {
+                        composable(
+                            Routes.LogInScreen.route,
+                            enterTransition = {
+                                slideIntoContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                                )
+                            }
+                        ) {
                             LogInScreen(navController, mainViewModel)
                         }
-                        composable(Routes.RegisterScreen.route) {
+                        composable(
+                            Routes.RegisterScreen.route,
+                            enterTransition = {
+                                slideIntoContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                                )
+                            }
+
+                        ) {
                             RegisterScreen(navController, mainViewModel)
                         }
                     }
@@ -198,22 +249,27 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                     shape = RoundedCornerShape(15)
                 )
                 Spacer(modifier = Modifier.weight(1f))
+                val userPrefs = UserPrefs(LocalContext.current)
+                val storedUserData = userPrefs.getUserData.collectAsState(initial = emptyList())
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
                         .align(Alignment.End)
                         .clickable {
                             scope.launch {
                                 state.close()
+                                if (viewModel.showLoading.value!!){
+                                    viewModel.modifyProcessing()
+                                }
                                 viewModel.logout()
+                                userPrefs.saveUserData(storedUserData.value[0], storedUserData.value[1], "n")
                                 navigationController.navigate(Routes.LogInScreen.route)
                             }
                         },
                     horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = { TODO() }) {
+                    IconButton(onClick = { }, modifier = Modifier.padding(16.dp)) {
                         Icon(
                             imageVector = Icons.Filled.Logout,
                             contentDescription = "Close",
@@ -222,7 +278,7 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                     }
                     Text(
                         "Log Out",
-                        modifier = Modifier.padding(0.dp),
+                        modifier = Modifier.padding(vertical = 16.dp),
                         style = TextStyle(
                             fontFamily = gilmer,
                             fontSize = 24.sp,

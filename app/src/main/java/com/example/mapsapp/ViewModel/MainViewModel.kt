@@ -94,6 +94,9 @@ class MainViewModel: ViewModel(){
     private val _showToastUnknownUser = MutableLiveData(false)
     val showToastUnknownUser = _showToastUnknownUser
 
+    private val _showToastExistentUser = MutableLiveData(false)
+    val showToastExistentUser = _showToastExistentUser
+
     fun setCameraPermissionGranted(granted: Boolean) {
         _cameraPermissionGranted.value = granted
     }
@@ -187,6 +190,8 @@ class MainViewModel: ViewModel(){
         }
     }
 
+
+
     fun uploadImage(imageUri: Uri, info: SavedMarker){
         val formatter = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault())
         val now = Date()
@@ -239,9 +244,9 @@ class MainViewModel: ViewModel(){
                 Log.i("IMAGE UPLOAD", "Image uploaded successfully")
                 storage.downloadUrl.addOnSuccessListener {
                     Log.i("IMAGEN", it.toString())
-                    addMarker(
+                    repository.editMarker(
                         SavedMarker(
-                            null,
+                            info.markerId,
                             info.uid,
                             info.title,
                             info.latitude,
@@ -257,8 +262,8 @@ class MainViewModel: ViewModel(){
                 Log.i("IMAGE UPLOAD", "Image upload failed")
                 repository.editMarker(
                     SavedMarker(
-                        null,
-                        userId.value!!,
+                        info.markerId,
+                        info.uid,
                         info.title,
                         info.latitude,
                         info.longitude,
@@ -271,24 +276,30 @@ class MainViewModel: ViewModel(){
     }
 
     fun modifyProcessing(){
-        showLoading.value = !(showLoading.value)!!
+        _showLoading.value = !(_showLoading.value)!!
     }
 
     fun register(username: String, password: String){
+        modifyProcessing()
         auth.createUserWithEmailAndPassword(username, password)
             .addOnCompleteListener{ task ->
                 if (task.isSuccessful){
-                    _goToNext.value = true
-                    login(username, password)
+                    login(username, password, true)
                 } else{
                     _goToNext.value = false
 
                 }
+            }
+            .addOnFailureListener {
+                _showToastExistentUser.value = true
                 modifyProcessing()
             }
     }
 
-    fun login(username: String?, password: String?){
+    fun login(username: String?, password: String?, register: Boolean){
+        if (!register){
+            modifyProcessing()
+        }
         auth.signInWithEmailAndPassword(username!!, password!!)
             .addOnCompleteListener{task ->
                 if (task.isSuccessful){
@@ -298,15 +309,17 @@ class MainViewModel: ViewModel(){
                 } else {
                     _goToNext.value = false
                 }
-                modifyProcessing()
+
             }
             .addOnFailureListener{
                 _showToastUnknownUser.value = true
+                modifyProcessing()
             }
     }
 
     fun hideToast(){
         _showToastUnknownUser.value = false
+        _showToastExistentUser.value = false
     }
 
     fun logout(){

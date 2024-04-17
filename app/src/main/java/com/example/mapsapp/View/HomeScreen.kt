@@ -645,7 +645,7 @@ fun MyTopAppBar(viewModel: MainViewModel, state: DrawerState) {
     TopAppBar(
         title = {
             Text(
-                text = "Map Marker",
+                text = "My Map",
                 style = TextStyle(
                     fontFamily = gilmer,
                     fontSize = 28.sp,
