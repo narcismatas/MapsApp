@@ -46,7 +46,7 @@ class MainViewModel: ViewModel(){
     private val _tempDesc = MutableLiveData("")
     val tempDesc = _tempDesc
 
-    private val _tempColor = MutableLiveData("Red")
+    private val _tempColor = MutableLiveData("Blue")
     val tempColor = _tempColor
 
     private val _showMarkerSaving = MutableLiveData(false)
@@ -55,7 +55,7 @@ class MainViewModel: ViewModel(){
     private val _isCurrentLocation = MutableLiveData(false)
     val isCurrentLocation = _isCurrentLocation
 
-    private val _markers = MutableLiveData<MutableList<SavedMarker>>(mutableListOf())
+    private val _markers = MutableLiveData<MutableList<SavedMarker>?>(null)
     val markers = _markers
 
     private val _currentMarker = MutableLiveData(SavedMarker())
@@ -97,6 +97,15 @@ class MainViewModel: ViewModel(){
     private val _showToastExistentUser = MutableLiveData(false)
     val showToastExistentUser = _showToastExistentUser
 
+    private val _colorFilter = MutableLiveData("")
+    val colorFilter = _colorFilter
+
+    private val _showDeleteDialog = MutableLiveData(false)
+    val showDeleteDialog = _showDeleteDialog
+
+    private val _deleteId = MutableLiveData("")
+    val deleteId = _deleteId
+
     fun setCameraPermissionGranted(granted: Boolean) {
         _cameraPermissionGranted.value = granted
     }
@@ -133,7 +142,7 @@ class MainViewModel: ViewModel(){
         _imageUri.value = null
         _tempTitle.value = ""
         _tempDesc.value = ""
-        _tempColor.value = "Red"
+        _tempColor.value = "Blue"
     }
 
     fun addMarker(info: SavedMarker){
@@ -172,7 +181,25 @@ class MainViewModel: ViewModel(){
         }
     }
 
-    fun getMarker(markerId: String) {
+    fun getFilteredMarkers(){
+        repository.getMarkers().whereEqualTo("uid", userId.value).whereEqualTo("color", colorFilter.value).addSnapshotListener{value, error ->
+            if (error != null){
+                Log.e("Firestone error", error.message.toString())
+                return@addSnapshotListener
+            }
+            val tempList = mutableListOf<SavedMarker>()
+            for (dc: DocumentChange in value?.documentChanges!!) {
+                if (dc.type == DocumentChange.Type.ADDED) {
+                    val newMarker = dc.document.toObject(SavedMarker::class.java)
+                    newMarker.markerId = dc.document.id
+                    tempList.add(newMarker)
+                }
+            }
+            _markers.value = tempList
+        }
+    }
+
+    fun getMarker(markerId: String): SavedMarker? {
         repository.getMarker(markerId).addSnapshotListener { value, error ->
             if (error != null){
                 Log.w("UserRepository", "Listen failed", error)
@@ -188,6 +215,8 @@ class MainViewModel: ViewModel(){
                 Log.d("UserRepository", "Current data: Null")
             }
         }
+
+        return currentMarker.value
     }
 
 
@@ -256,6 +285,7 @@ class MainViewModel: ViewModel(){
                             image = it.toString()
                         )
                     )
+                    getMarkers()
                 }
             }
             .addOnFailureListener {
@@ -272,6 +302,7 @@ class MainViewModel: ViewModel(){
                         image = null
                     )
                 )
+                getMarkers()
             }
     }
 
@@ -325,5 +356,18 @@ class MainViewModel: ViewModel(){
     fun logout(){
         auth.signOut()
         _goToNext.value = false
+    }
+
+    fun changeColorFilter(color: String){
+        _colorFilter.value = color
+    }
+
+    fun deleteMarker(){
+        repository.deleteMarker(deleteId.value!!)
+    }
+
+    fun showDeleteDialog(markerId: String?){
+        if (_showDeleteDialog.value!!) _deleteId.value = "" else _deleteId.value = markerId
+        _showDeleteDialog.value = !showDeleteDialog.value!!
     }
 }

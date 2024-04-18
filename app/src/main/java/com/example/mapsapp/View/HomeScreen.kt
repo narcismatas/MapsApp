@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -19,11 +20,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -33,12 +36,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -47,6 +52,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -80,6 +86,8 @@ import com.example.mapsapp.R
 import com.example.mapsapp.ViewModel.MainViewModel
 import com.example.mapsapp.ViewModel.gilmer
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.PermissionState
+import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
@@ -118,7 +126,7 @@ fun HomeScaffold(navController: NavController, viewModel: MainViewModel, state: 
                 permissionState.launchPermissionRequest()
             }
             if (permissionState.status.isGranted) {
-                Map(viewModel)
+                Map(viewModel, permissionState)
             } else {
                 Box(modifier = Modifier.padding(it)) {
                     Text(text = "Permissions required")
@@ -135,9 +143,10 @@ fun HomeScaffold(navController: NavController, viewModel: MainViewModel, state: 
 
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun Map(viewModel: MainViewModel) {
+fun Map(viewModel: MainViewModel, permissionState: PermissionState) {
     val context = LocalContext.current
     val fusedLocationProvidedClient =
         remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -158,38 +167,59 @@ fun Map(viewModel: MainViewModel) {
 
     val selectedPos by viewModel.selectedPosition.observeAsState(LatLng(0.0, 0.0))
     Box {
-        if (lastKnownLocation != null) {
+        if (permissionState.status == PermissionStatus.Granted) {
             ExtendedFloatingActionButton(
                 onClick = {
-                    viewModel.newPosSelected(
-                        LatLng(
-                            lastKnownLocation!!.latitude,
-                            lastKnownLocation!!.longitude
-                        ), true
-                    )
+                    if (lastKnownLocation != null){
+                        viewModel.newPosSelected(
+                            LatLng(
+                                lastKnownLocation!!.latitude,
+                                lastKnownLocation!!.longitude
+                            ), true
+                        )
+                    }
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .zIndex(100f)
                     .offset(x = (-30).dp, y = (-30).dp)
                     .height(50.dp)
-                    .wrapContentWidth(),
+                    .wrapContentWidth()
+                    .animateContentSize(),
                 containerColor = Color.Black,
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Save,
-                    contentDescription = "Add marker to location",
-                    tint = Color.White
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Your Location",
-                    style = TextStyle(
-                        fontFamily = gilmer,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                if (lastKnownLocation != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Save,
+                        contentDescription = "Add marker to location",
+                        tint = Color.White
                     )
-                )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Your Location",
+                        style = TextStyle(
+                            fontFamily = gilmer,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                } else {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(25.dp),
+                        color = Color.White,
+                        trackColor = Color.DarkGray,
+                        strokeWidth = 3.dp
+                    )
+                    Spacer(modifier = Modifier.width(15.dp))
+                    Text(
+                        text = "Finding Loaction",
+                        style = TextStyle(
+                            fontFamily = gilmer,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
+                }
             }
         }
 
@@ -248,7 +278,7 @@ fun Map(viewModel: MainViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLocation(navController: NavController, viewModel: MainViewModel) {
-    val sheetState = rememberModalBottomSheetState(true)
+    var sheetState = rememberModalBottomSheetState(true)
     val scope = rememberCoroutineScope()
     val showBottomSheet by viewModel.showMarkerSaving.observeAsState(false)
     val isCurrentLocation by viewModel.isCurrentLocation.observeAsState(true)
@@ -291,7 +321,7 @@ fun AddLocation(navController: NavController, viewModel: MainViewModel) {
         ) {
             val markerDescription by viewModel.tempDesc.observeAsState()
             val markerTitle by viewModel.tempTitle.observeAsState()
-            val selectedColor by viewModel.tempColor.observeAsState("Red")
+            val selectedColor by viewModel.tempColor.observeAsState("Blue")
             val colorOptions = listOf("Blue", "Cyan", "Green", "Yellow", "Red", "LightGray")
             val uid by viewModel.userId.observeAsState()
             LazyColumn(

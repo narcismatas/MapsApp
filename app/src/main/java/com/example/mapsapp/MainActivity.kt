@@ -170,7 +170,6 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
         gesturesEnabled = state.isOpen,
         drawerContent = {
             ModalDrawerSheet(
-                //modifier = Modifier.fillMaxWidth(0.6f)
             ) {
                 Row(
                     modifier = Modifier
@@ -223,7 +222,8 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                         }
 
                     },
-                    shape = RoundedCornerShape(15)
+                    shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 100, bottomEndPercent = 100),
+                    modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 NavigationDrawerItem(
                     label = {
@@ -246,7 +246,8 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                             navigationController.navigate(Routes.ListScreen.route)
                         }
                     },
-                    shape = RoundedCornerShape(15)
+                    shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 100, bottomEndPercent = 100),
+                    modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 val userPrefs = UserPrefs(LocalContext.current)
