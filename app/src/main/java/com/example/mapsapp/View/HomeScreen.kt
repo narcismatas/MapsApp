@@ -47,6 +47,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
@@ -181,12 +182,19 @@ fun Map(viewModel: MainViewModel, permissionState: PermissionState) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .zIndex(100f)
+                    .padding(5.dp)
+                    .zIndex(1f)
                     .offset(x = (-30).dp, y = (-30).dp)
                     .height(50.dp)
                     .wrapContentWidth()
                     .animateContentSize(),
                 containerColor = Color.Black,
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 10.dp,
+                    pressedElevation = 8.dp,
+                    hoveredElevation = 2.dp,
+                    focusedElevation = 1.dp,
+                ),
             ) {
                 if (lastKnownLocation != null) {
                     Icon(

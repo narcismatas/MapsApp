@@ -88,20 +88,20 @@ fun ListScaffold(navController: NavController, viewModel: MainViewModel, state: 
                 .background(Color(0xFF6c757d))
         ) {
             val showDialog by viewModel.showDeleteDialog.observeAsState(false)
-            if (showDialog){
+            if (showDialog) {
                 DeleteAlert(viewModel = viewModel)
             }
             val colorFilter by viewModel.colorFilter.observeAsState("")
             val markers by viewModel.markers.observeAsState()
 
-            if (colorFilter != ""){
+            if (colorFilter != "") {
                 viewModel.getFilteredMarkers()
             } else {
                 viewModel.getMarkers()
             }
 
-            if (markers == null || markers!!.size == 0){
-                if (colorFilter == ""){
+            if (markers == null || markers!!.size == 0) {
+                if (colorFilter == "") {
                     Text(
                         text = "No markers saved",
                         style = TextStyle(
@@ -124,8 +124,7 @@ fun ListScaffold(navController: NavController, viewModel: MainViewModel, state: 
                 }
             } else {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
@@ -174,7 +173,10 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: Nav
             .fillMaxWidth(0.95f)
             .wrapContentHeight(),
         shape = RoundedCornerShape(20),
-        onClick = {},
+        onClick = {
+            viewModel.getMarker(marker.markerId!!)
+            navController.navigate(Routes.DetailScreen.route)
+        },
         colors = CardColors(
             containerColor = Color.DarkGray,
             contentColor = Color.White,
@@ -237,7 +239,7 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: Nav
                     viewModel.hideMarkerSaving()
                     viewModel.clearImage()
 
-                    if (viewModel.colorFilter.value != ""){
+                    if (viewModel.colorFilter.value != "") {
                         viewModel.getFilteredMarkers()
                     } else {
                         viewModel.getMarkers()
@@ -308,7 +310,7 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: Nav
             FloatingActionButton(
                 onClick = {
                     viewModel.showDeleteDialog(marker.markerId!!)
-                          },
+                },
                 modifier = Modifier
                     .height(50.dp)
                     .aspectRatio(1f)
@@ -356,12 +358,12 @@ fun ListTopAppBar(viewModel: MainViewModel, state: DrawerState) {
             val selectedFilter by viewModel.colorFilter.observeAsState("")
             var expanded by remember { mutableStateOf(false) }
             var colors = listOf("", "Blue", "Cyan", "Green", "Yellow", "Red", "LightGray")
-            Column (
+            Column(
                 modifier = Modifier
                     .wrapContentWidth()
                     .animateContentSize()
                     .clip(shape = RoundedCornerShape(25))
-            ){
+            ) {
                 FloatingActionButton(
                     onClick = { expanded = true },
                     contentColor = Color.Black,
@@ -391,9 +393,9 @@ fun ListTopAppBar(viewModel: MainViewModel, state: DrawerState) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
                     modifier = Modifier.background(Color.Black, RoundedCornerShape(25)),
-                    properties =  PopupProperties(focusable = true)
+                    properties = PopupProperties(focusable = true)
                 ) {
-                    colors.forEach { color->
+                    colors.forEach { color ->
                         FloatingActionButton(
                             containerColor = when (color) {
                                 "Red" -> Color(0xFFff0000)
@@ -406,7 +408,7 @@ fun ListTopAppBar(viewModel: MainViewModel, state: DrawerState) {
                             },
                             onClick = {
                                 viewModel.changeColorFilter(color)
-                                if (selectedFilter != ""){
+                                if (selectedFilter != "") {
                                     viewModel.getFilteredMarkers()
                                 } else {
                                     viewModel.getMarkers()
@@ -415,7 +417,7 @@ fun ListTopAppBar(viewModel: MainViewModel, state: DrawerState) {
                             },
                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.5.dp)
                         ) {
-                            if (color == ""){
+                            if (color == "") {
                                 Icon(
                                     imageVector = Icons.Filled.FormatColorReset,
                                     contentDescription = "Pick Color",

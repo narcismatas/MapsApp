@@ -8,5 +8,6 @@ sealed class Routes(val route: String) {
     object GalleryScreen: Routes("gallery_screen")
     object LogInScreen: Routes("login_screen")
     object RegisterScreen: Routes("register_screen")
+    object DetailScreen: Routes("detail_screen")
 
 }

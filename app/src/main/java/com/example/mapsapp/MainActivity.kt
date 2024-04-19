@@ -69,6 +69,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mapsapp.View.CameraScreen
+import com.example.mapsapp.View.DetailScreen
 import com.example.mapsapp.View.GalleryScreen
 import com.example.mapsapp.View.HomeScreen
 import com.example.mapsapp.View.ListScreen
@@ -117,6 +118,23 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Routes.GalleryScreen.route) {
                             GalleryScreen(navController, mainViewModel)
+                        }
+                        composable(
+                            Routes.DetailScreen.route,
+                            enterTransition = {
+                                slideIntoContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.Start
+                                )
+                            },
+                            exitTransition = {
+                                slideOutOfContainer(
+                                    animationSpec = tween(500, easing = EaseInOutExpo),
+                                    towards = AnimatedContentTransitionScope.SlideDirection.End
+                                )
+                            }
+                        ) {
+                            DetailScreen(navController, mainViewModel)
                         }
                         composable(
                             Routes.LogInScreen.route,
@@ -259,11 +277,15 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                         .clickable {
                             scope.launch {
                                 state.close()
-                                if (viewModel.showLoading.value!!){
+                                if (viewModel.showLoading.value!!) {
                                     viewModel.modifyProcessing()
                                 }
                                 viewModel.logout()
-                                userPrefs.saveUserData(storedUserData.value[0], storedUserData.value[1], "n")
+                                userPrefs.saveUserData(
+                                    storedUserData.value[0],
+                                    storedUserData.value[1],
+                                    "n"
+                                )
                                 navigationController.navigate(Routes.LogInScreen.route)
                             }
                         },
