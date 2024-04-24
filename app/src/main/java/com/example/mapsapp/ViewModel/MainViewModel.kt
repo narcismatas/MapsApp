@@ -79,6 +79,9 @@ class MainViewModel: ViewModel(){
     private val _showPermissionDenied = MutableLiveData(false)
     val showPermissionDenied = _showPermissionDenied
 
+    private val _showLocPermissionDenied = MutableLiveData(false)
+    val showLocPermissionDenied = _showLocPermissionDenied
+
     private val _goToNext = MutableLiveData<Boolean>(false)
     val goToNext = _goToNext
 
@@ -118,6 +121,11 @@ class MainViewModel: ViewModel(){
         _showPermissionDenied.value = denied
     }
 
+    fun setShowLocPermissionDenied(denied: Boolean){
+        _showLocPermissionDenied.value = denied
+    }
+
+
     fun onColorChange(color: String){
         _tempColor.value = color
     }
@@ -134,6 +142,13 @@ class MainViewModel: ViewModel(){
         _selectedPosition.value = latLng
         _showMarkerSaving.value = true
         _isCurrentLocation.value = isCurrentLocation
+    }
+
+    fun showEditMarker(title: String, desc: String, color: String){
+        _showMarkerSaving.value = true
+        _tempTitle.value = title
+        _tempDesc.value = desc
+        _tempColor.value = color
     }
 
     fun hideMarkerSaving(){
@@ -306,6 +321,12 @@ class MainViewModel: ViewModel(){
             }
     }
 
+    fun editMarker(info: SavedMarker){
+        repository.editMarker(info)
+    }
+
+
+
     fun modifyProcessing(){
         _showLoading.value = !(_showLoading.value)!!
     }
@@ -344,13 +365,15 @@ class MainViewModel: ViewModel(){
             }
             .addOnFailureListener{
                 _showToastUnknownUser.value = true
-                modifyProcessing()
+                _showLoading.value = false
             }
     }
 
     fun hideToast(){
         _showToastUnknownUser.value = false
         _showToastExistentUser.value = false
+        _goToNext.value = false
+        _showLoading.value = false
     }
 
     fun logout(){

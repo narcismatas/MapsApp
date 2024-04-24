@@ -1,6 +1,12 @@
 package com.example.mapsapp.View
 
 
+import android.Manifest
+import android.app.Activity
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,12 +63,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
@@ -205,13 +213,52 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: Nav
                         .clip(RoundedCornerShape(20)),
                 )
             } else {
+                val context = LocalContext.current
+                val isCameraPermissionGranted by viewModel.cameraPermissionGranted.observeAsState(false)
+                val shouldShowPermissionRationale by viewModel.shouldShowPermissionRationale.observeAsState(
+                    false
+                )
+                val showPermissionDenied by viewModel.showPermissionDenied.observeAsState(false)
+                val launcher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission(),
+                    onResult = { isGranted ->
+                        if (isGranted) {
+                            viewModel.setCameraPermissionGranted(true)
+                            navController.navigate(Routes.CameraScreen.route)
+                        } else {
+                            viewModel.setShouldPermissionRationale(
+                                ActivityCompat.shouldShowRequestPermissionRationale(
+                                    context as Activity,
+                                    Manifest.permission.CAMERA
+                                )
+                            )
+                            if (!shouldShowPermissionRationale) {
+                                Log.i("CameraScreen", "No podemos volver a pedir permisos")
+                                viewModel.setShowPermissionDenied(true)
+                            }
+                        }
+                    }
+                )
                 val uri by viewModel.imageUri.observeAsState()
                 FloatingActionButton(
                     onClick = {
+
                         viewModel.onTitleChange(marker.title)
                         viewModel.onDescChange(marker.description ?: "")
                         viewModel.onColorChange(marker.color)
-                        navController.navigate(Routes.CameraScreen.route)
+                        if (!isCameraPermissionGranted) {
+                            launcher.launch(Manifest.permission.CAMERA)
+                        } else {
+                            navController.navigate(Routes.CameraScreen.route)
+                        }
+                        if (showPermissionDenied) {
+                            Toast.makeText(
+                                context,
+                                "Camera permission denied. Enable it through the settings",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+
                         viewModel.clearImage()
                     },
                     modifier = Modifier

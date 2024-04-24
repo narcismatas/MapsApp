@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
 import android.os.Environment
+import android.provider.MediaStore
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -65,6 +66,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.io.File
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -137,7 +139,7 @@ fun CameraScreen(navController: NavController, viewModel: MainViewModel) {
             FloatingActionButton(
                 onClick = {
                     takePhoto(context, controller) { photo ->
-                        uri = getCamImageUri(context)
+                        uri = bitmapToUri(context, photo)
                         Log.i("IMAGEN",uri.toString())
                         viewModel.photoTaken(photo, uri)
 
@@ -279,23 +281,21 @@ private fun takePhoto(
     )
 }
 
-fun getCamImageUri(context: Context): Uri? {
-    var uri: Uri? = null
-    val file = createImageFile(context)
-    try {
-        uri = FileProvider.getUriForFile(context, "com.testsoft.camtest.fileprovider", file)
-    } catch (e: Exception) {
-        Log.e(ContentValues.TAG, "Error: ${e.message}")
+fun bitmapToUri(context: Context, bitmap: Bitmap): Uri? {
+    val filename = "${System.currentTimeMillis()}.jpg"
+    val values = ContentValues().apply {
+        put(MediaStore.Images.Media.TITLE, filename)
+        put(MediaStore.Images.Media.DISPLAY_NAME, filename)
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+        put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis())
+        put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+    }
+
+    val uri: Uri? = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+    uri?.let {
+        val outstream: OutputStream? = context.contentResolver.openOutputStream(it)
+        outstream?.let { bitmap.compress(Bitmap.CompressFormat.JPEG, 100, it) }
+        outstream?.close()
     }
     return uri
-}
-
-private fun createImageFile(context: Context) : File {
-    val timestamp = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss").format(Date())
-    val imageDirectory = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-    return File.createTempFile(
-        "Camtest_Image_${timestamp}",
-        ".jpg",
-        imageDirectory
-    )
 }

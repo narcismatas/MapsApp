@@ -78,6 +78,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.core.graphics.toColorInt
 import androidx.navigation.NavController
@@ -126,13 +127,50 @@ fun HomeScaffold(navController: NavController, viewModel: MainViewModel, state: 
             LaunchedEffect(Unit) {
                 permissionState.launchPermissionRequest()
             }
+            val context = LocalContext.current
             if (permissionState.status.isGranted) {
                 Map(viewModel, permissionState)
             } else {
                 Box(modifier = Modifier.padding(it)) {
-                    Text(text = "Permissions required")
-                    Button(onClick = { permissionState.launchPermissionRequest() }) {
-                        Text(text = "Accept")
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .padding(horizontal = 20.dp)
+                            .align(Alignment.Center)
+                    ) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Text(
+                            text = "Permission required",
+                            fontFamily = gilmer,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 30.sp
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "This app needs access to the location to show the map",
+                            fontFamily = gilmer,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            modifier = Modifier
+                                .height(40.dp)
+                                .wrapContentWidth(),
+                            shape = RoundedCornerShape(30),
+                            onClick = {
+                                openAppSettings(context as Activity)
+                            }) {
+                            Text(
+                                text = "Accept",
+                                fontFamily = gilmer,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 18.sp
+                            )
+                        }
                     }
                 }
             }
@@ -152,9 +190,9 @@ fun Map(viewModel: MainViewModel, permissionState: PermissionState) {
     val fusedLocationProvidedClient =
         remember { LocationServices.getFusedLocationProviderClient(context) }
     var lastKnownLocation by remember { mutableStateOf<Location?>(null) }
-    var deviceLatLng by remember { mutableStateOf(LatLng(0.0, 0.0)) }
+    var deviceLatLng by remember { mutableStateOf(LatLng(41.4533543, 2.1862611)) }
     val cameraPositionState =
-        rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(deviceLatLng, 14f) }
+        rememberCameraPositionState { position = CameraPosition.fromLatLngZoom(deviceLatLng, 13f) }
     val locationResult = fusedLocationProvidedClient.getCurrentLocation(100, null)
     locationResult.addOnCompleteListener(context as MainActivity) { task ->
         if (task.isSuccessful) {
@@ -657,7 +695,7 @@ fun PermissionDeclinedScreen() {
                 openAppSettings(context as Activity)
             }) {
             Text(
-                text = "Accept",
+                text = "Go to Settings",
                 fontFamily = gilmer,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp

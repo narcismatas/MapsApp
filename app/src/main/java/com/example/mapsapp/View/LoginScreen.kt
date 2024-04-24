@@ -138,6 +138,19 @@ fun LogInScreen(navController: NavController, viewModel: MainViewModel) {
                         )
 
                     )
+                    if (showToast) {
+                        Toast.makeText(
+                            LocalContext.current,
+                            "Unknown user",
+                            Toast.LENGTH_SHORT
+                        )
+                            .show()
+                        password = ""
+                        viewModel.hideToast()
+                        CoroutineScope(Dispatchers.IO).launch {
+                            userPrefs.saveUserData("", "", "n")
+                        }
+                    }
                     if (loading) {
                         CircularProgressIndicator(
                             modifier = Modifier
@@ -233,7 +246,6 @@ fun LogInScreen(navController: NavController, viewModel: MainViewModel) {
                                         Icons.Filled.Visibility
                                     else Icons.Filled.VisibilityOff
 
-                                    // Please provide localized description for accessibility services
                                     val description =
                                         if (visiblePass) "Hide password" else "Show password"
 
@@ -274,17 +286,7 @@ fun LogInScreen(navController: NavController, viewModel: MainViewModel) {
                                 .offset(y = (-30).dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            if (showToast) {
-                                Toast.makeText(
-                                    LocalContext.current,
-                                    "Unknown user",
-                                    Toast.LENGTH_SHORT
-                                )
-                                    .show()
-                                password = ""
-                                viewModel.hideToast()
 
-                            }
 
                             ElevatedButton(
                                 onClick = {

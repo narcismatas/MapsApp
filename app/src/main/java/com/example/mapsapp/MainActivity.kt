@@ -1,8 +1,13 @@
 package com.example.mapsapp
 
+import android.Manifest
+import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
@@ -19,6 +24,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,6 +32,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -62,8 +71,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -78,6 +89,7 @@ import com.example.mapsapp.View.Map
 import com.example.mapsapp.View.MyTopAppBar
 import com.example.mapsapp.View.RegisterScreen
 import com.example.mapsapp.View.Routes
+import com.example.mapsapp.View.openAppSettings
 import com.example.mapsapp.ui.theme.MapsAppTheme
 import com.example.mapsapp.ViewModel.MainViewModel
 import com.example.mapsapp.ViewModel.gilmer
@@ -109,6 +121,7 @@ class MainActivity : ComponentActivity() {
                             }
                         ) {
                             MyDrawer(mainViewModel, navController, "Home")
+                            mainViewModel.hideMarkerSaving()
                         }
                         composable(Routes.ListScreen.route) {
                             MyDrawer(mainViewModel, navController, "List")
@@ -240,7 +253,12 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                         }
 
                     },
-                    shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 100, bottomEndPercent = 100),
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        bottomStartPercent = 0,
+                        topEndPercent = 100,
+                        bottomEndPercent = 100
+                    ),
                     modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 NavigationDrawerItem(
@@ -264,7 +282,12 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                             navigationController.navigate(Routes.ListScreen.route)
                         }
                     },
-                    shape = RoundedCornerShape(topStartPercent = 0, bottomStartPercent = 0, topEndPercent = 100, bottomEndPercent = 100),
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        bottomStartPercent = 0,
+                        topEndPercent = 100,
+                        bottomEndPercent = 100
+                    ),
                     modifier = Modifier.fillMaxWidth(0.7f)
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -292,13 +315,13 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    IconButton(onClick = { }, modifier = Modifier.padding(16.dp)) {
-                        Icon(
-                            imageVector = Icons.Filled.Logout,
-                            contentDescription = "Close",
-                            Modifier.size(35.dp)
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Icon(
+                        imageVector = Icons.Filled.Logout,
+                        contentDescription = "Close",
+                        Modifier.size(35.dp)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
                     Text(
                         "Log Out",
                         modifier = Modifier.padding(vertical = 16.dp),
@@ -313,16 +336,14 @@ fun MyDrawer(viewModel: MainViewModel, navigationController: NavController, scre
             }
         }
     ) {
+
         when (screen) {
             "Home" -> HomeScreen(
                 navController = navigationController,
                 viewModel = viewModel,
                 state = state
             )
-
             "List" -> ListScreen(navController = navigationController, viewModel = viewModel, state)
         }
     }
 }
-
-
