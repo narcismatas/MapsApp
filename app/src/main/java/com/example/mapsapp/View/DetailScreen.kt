@@ -390,7 +390,7 @@ fun DetailTopAppBar(navController: NavController, viewModel: MainViewModel) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun EditMarker(navController: NavController, viewModel: MainViewModel) {
     val marker by viewModel.currentMarker.observeAsState()
@@ -559,25 +559,46 @@ fun EditMarker(navController: NavController, viewModel: MainViewModel) {
                 item {
                     if (showPermissionDenied) {
                         PermissionDeclinedScreen()
-                    } else if (image != null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .padding(top = 20.dp),
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                bitmap = image!!.asImageBitmap(),
-                                contentDescription = "PhotoTaken",
+                    } else {
+                        if (image != null) {
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxWidth(0.5f)
-                                    .aspectRatio(1f)
-                                    .clip(RoundedCornerShape(10)),
-                                contentScale = ContentScale.Crop
-                            )
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .padding(top = 20.dp),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    bitmap = image!!.asImageBitmap(),
+                                    contentDescription = "PhotoTaken",
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.5f)
+                                        .aspectRatio(1f)
+                                        .clip(RoundedCornerShape(10)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+                        } else {
+                            if (marker!!.image != null) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .padding(top = 20.dp),
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    GlideImage(
+                                        model = marker!!.image,
+                                        contentDescription = "Photo Saved",
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.5f)
+                                            .aspectRatio(1f)
+                                            .clip(RoundedCornerShape(10)),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                }
+                            }
                         }
-
                     }
                 }
                 item {
