@@ -341,7 +341,15 @@ fun MarkerCard(marker: SavedMarker, viewModel: MainViewModel, navController: Nav
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 Text(
-                    text = if (marker.description != "") marker.description!! else "No description added",
+                    text = if (marker.description != "") {
+                        if (marker.description!!.length > 50) {
+                            marker.description!!.substring(0, 50) + "..."
+                        } else{
+                            marker.description!!
+                        }
+                    } else {
+                        "No description added"
+                    },
                     style = TextStyle(
                         fontFamily = gilmer,
                         fontSize = 16.sp,

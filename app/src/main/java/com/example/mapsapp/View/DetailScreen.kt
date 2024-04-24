@@ -6,13 +6,23 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.EaseInOutExpo
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,8 +72,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -142,17 +155,21 @@ fun DetailScaffold(navController: NavController, viewModel: MainViewModel) {
             val coroutineScope = rememberCoroutineScope()
             AnimatedVisibility(
                 visible = showButton,
+                enter = slideInVertically() + fadeIn(),
+                exit = slideOutVertically() + fadeOut(),
                 modifier = Modifier
                     .zIndex(10f)
                     .align(Alignment.TopEnd)
-                    .offset(x = (-20).dp, y = 20.dp),
-                enter = fadeIn() + expandIn(),
-                exit = fadeOut() + shrinkOut()
+                    .offset(x = (-20).dp, y = 20.dp)
+
             ) {
                 FloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
-                            listState.animateScrollToItem(index = listState.layoutInfo.totalItemsCount - 1)
+                            listState.animateScrollBy(
+                                value = 1500f,
+                                animationSpec = tween(durationMillis = 1000, easing = EaseInOut)
+                            )
 
                         }
                     },
@@ -224,17 +241,40 @@ fun DetailScaffold(navController: NavController, viewModel: MainViewModel) {
                             )
 
                             if (marker!!.description!! != "") {
-                                Text(
-                                    text = marker!!.description!!,
-                                    style = TextStyle(
-                                        fontFamily = gilmer,
-                                        fontSize = 24.sp,
-                                        fontWeight = FontWeight.Normal
-                                    ),
-                                    modifier = Modifier
-                                        .align(Alignment.Start)
-                                        .padding(vertical = 5.dp)
-                                )
+                                var size by remember { mutableStateOf(marker!!.description!!.length) }
+                                if (size > 200) {
+                                    var expanded by remember { mutableStateOf(false) }
+                                    Text(
+                                        text = if (expanded) marker!!.description!! else marker!!.description!!.substring(
+                                            0,
+                                            150
+                                        ) + "...",
+                                        style = TextStyle(
+                                            fontFamily = gilmer,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Light
+                                        ),
+                                        modifier = Modifier
+                                            .align(Alignment.Start)
+                                            .padding(top = 10.dp, bottom = 5.dp)
+                                            .clickable {
+                                                expanded = !expanded
+                                            }
+                                            .animateContentSize()
+                                    )
+                                } else {
+                                    Text(
+                                        text = marker!!.description!!,
+                                        style = TextStyle(
+                                            fontFamily = gilmer,
+                                            fontSize = 20.sp,
+                                            fontWeight = FontWeight.Light
+                                        ),
+                                        modifier = Modifier
+                                            .align(Alignment.Start)
+                                            .padding(top = 10.dp, bottom = 5.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -496,7 +536,8 @@ fun EditMarker(navController: NavController, viewModel: MainViewModel) {
                         onValueChange = { viewModel.onDescChange(it) },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 20.dp)
+                            .heightIn(max = 200.dp),
                         shape = RoundedCornerShape(10.dp),
                         placeholder = { Text("Marker Description") }
                     )
